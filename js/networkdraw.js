@@ -1,17 +1,31 @@
 (function() {
-    Kinetic.MyCircle = function(config) {
-        this._initMyCircle(config);
-    };
+  Kinetic.MyCircle = function(config) {
+    this._initMyCircle(config);
+  };
 
-    Kinetic.MyCircle.prototype = {
-        _initMyCircle: function(config) {
-            Kinetic.Circle.call(this, config);
-            },
-        parent_object : {}
-    };
+  Kinetic.MyCircle.prototype = {
+    _initMyCircle: function(config) {
+      Kinetic.Circle.call(this, config);
+    },
+    parent_object : {}
+  };
 
   Kinetic.Util.extend(Kinetic.MyCircle, Kinetic.Circle);
+
+  Kinetic.MyImage = function(config) {
+    this._initMyImage(config);
+  };
+
+  Kinetic.MyImage.prototype = {
+    _initMyImage: function(config) {
+      Kinetic.Image.call(this, config);
+    },
+    parent_object : {}
+  };
+
+  Kinetic.Util.extend(Kinetic.MyImage, Kinetic.Image);
 })();
+
 $(function() {
   var NetworkDrawer = NetworkDrawer || {};
   NetworkDrawer.util = (function() {
@@ -23,19 +37,17 @@ $(function() {
       var canvasY = 0;
       var currentElement = this;
 
-      do{
+      do {
         totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
         totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
       }
-      while(currentElement = currentElement.offsetParent)
+      while(currentElement = currentElement.offsetParent) { //jshint ignore: line
         canvasX = event.pageX - totalOffsetX;
         canvasY = event.pageY - totalOffsetY;
-        return {x:canvasX, y:canvasY}
+        return { x: canvasX, y: canvasY };
+      }
     }
     HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
-
-    return {
-    };
   })();
 
   NetworkDrawer.objects =(function() {
@@ -45,15 +57,15 @@ $(function() {
     };
 
     var get_img_obj = function(svgs, name) {
-      for(var i=0; i<svgs.length; i++) {
+      for(var i = 0; i < svgs.length; i++) {
         if(svgs[i].name === name) {
           return svgs[i].img;
         }
       }
-    }
+    };
 
-    function kinetic_image(svgs, x, y, name, width, height) {
-      var k_image = new Kinetic.Image({
+    var kinetic_image = function(svgs, x, y, name, width, height) {
+      var k_image = new Kinetic.MyImage({
         image: get_img_obj(svgs, name),
         x: x,
         y: y,
@@ -80,9 +92,9 @@ $(function() {
         fill: 'red',
         stroke: 'black',
         strokeWidth: 2,
-        draggable: true,
+        draggable: true
       });
-    }
+    };
 
 
     var Joint = function(coords) {
@@ -109,11 +121,21 @@ $(function() {
         var leng = _self.interfaces.length;
         switch(leng) {
           case 0:
-            return {x: 35, y: 80};
-          break;
+            return {x: 0, y: 80};
           case 1:
-            return {x: 75, y: 35};
-          break;
+            return {x: 20, y: 80};
+          case 2:
+            return {x: 40, y: 80};
+          case 3:
+            return {x: 60, y: 80};
+          case 4:
+            return {x: 0, y: -5};
+          case 5:
+            return {x: 20, y: -5};
+          case 6:
+            return {x: 40, y: -5};
+          case 7:
+            return {x: 60, y: -5};
         }
       };
       this.interfaces =[];
@@ -128,24 +150,16 @@ $(function() {
         );
         iface.kinetic.parent_object = iface;
         iface.kinetic.on('dragend', function() {
-          iface.offset_x = iface.kinetic.getPosition().x - _self.kinetic.getPosition().x;
-          iface.offset_y = iface.kinetic.getPosition().y - _self.kinetic.getPosition().y;
+          iface.offset_x =
+            iface.kinetic.getPosition().x - _self.kinetic.getPosition().x;
+          iface.offset_y =
+            iface.kinetic.getPosition().y - _self.kinetic.getPosition().y;
         });
+
 
         iface.kinetic.on('dragmove', function() {
           iface.joints.forEach(function(joint) {
-            var iface_x = iface.kinetic.getPosition().x;
-            var iface_y = iface.kinetic.getPosition().y;
-            if(joint.point === "p1") {
-              joint.obj.kinetic.setPoints([iface_x, iface_y , joint.obj.p2.x, joint.obj.p2.y])
-              joint.obj.p1 = {x: iface_x, y: iface_y}
-              Layer1.draw();
-            };
-            if(joint.point === "p2") {
-              joint.obj.kinetic.setPoints([joint.obj.p1.x, joint.obj.p1.y, iface_x, iface_y])
-              joint.obj.p2 = {x: iface_x, y: iface_y}
-              Layer1.draw();
-            };
+            interfaceJointsHandler(iface, joint);
           });
         });
 
@@ -153,33 +167,37 @@ $(function() {
         Layer1.draw();
         this.interfaces.push(iface);
       };
-      this.kinetic.on('dragstart', function() {
-        _self.kinetic.on('dragmove', function() {
-          _self.interfaces.forEach(function(iface) {
-            iface.kinetic.setPosition({
-              x: _self.kinetic.getPosition().x + iface.offset_x,
-              y: _self.kinetic.getPosition().y + iface.offset_y
-            });
-            iface.joints.forEach(function(joint) {
-            var iface_x = iface.kinetic.getPosition().x;
-            var iface_y = iface.kinetic.getPosition().y;
-            if(joint.point === "p1") {
-              joint.obj.kinetic.setPoints([iface_x, iface_y , joint.obj.p2.x, joint.obj.p2.y])
-              joint.obj.p1 = {x: iface_x, y: iface_y}
-              Layer1.draw();
-            };
-            if(joint.point === "p2") {
-              joint.obj.kinetic.setPoints([joint.obj.p1.x, joint.obj.p1.y, iface_x, iface_y])
-              joint.obj.p2 = {x: iface_x, y: iface_y}
-              Layer1.draw();
-            };
+      this.kinetic.on('dragmove', function() {
+        _self.interfaces.forEach(function(iface) {
+          iface.kinetic.setPosition({
+            x: _self.kinetic.getPosition().x + iface.offset_x,
+            y: _self.kinetic.getPosition().y + iface.offset_y
           });
-
+          iface.joints.forEach(function(joint) {
+            interfaceJointsHandler(iface, joint);
           });
         });
       });
     };
 
+    var interfaceJointsHandler = function(iface, joint) {
+      var iface_x = iface.kinetic.getPosition().x;
+      var iface_y = iface.kinetic.getPosition().y;
+      if(joint.point === "p1") {
+        joint.obj.kinetic.setPoints(
+          [iface_x, iface_y, joint.obj.p2.x, joint.obj.p2.y]
+        );
+        joint.obj.p1 = { x: iface_x, y: iface_y };
+        Layer1.draw();
+      }
+      if(joint.point === "p2") {
+        joint.obj.kinetic.setPoints(
+          [joint.obj.p1.x, joint.obj.p1.y, iface_x, iface_y]
+        );
+        joint.obj.p2 = { x: iface_x, y: iface_y };
+        Layer1.draw();
+      }
+    };
     var Desktop = function(svgs, x, y) {
       this.type = "Desktop";
       this.x = x;
@@ -213,7 +231,7 @@ $(function() {
          case "Server":
            server = new Server(LoadedSvgs, 30, 50);
            server.addinterface();
-           server.addinterface();
+           server.kinetic.parent_object = server;
            Layer1.add(server.kinetic);
            Layer1.draw();
          break;
@@ -236,7 +254,7 @@ $(function() {
          break;
         }
       });
-    }
+    };
 
     var create_control_panel = function() {
       var height = window.innerHeight - $('#container').innerHeight()  - 10;
@@ -254,15 +272,15 @@ $(function() {
           "<option value='Desktop'>Desktop</option>" +
           "<option value='Cloud'>Cloud</option>" +
           "<option value='Router'>Router</option>" +
-        "</select>"
+        "</select>";
       control_panel.append(element_selection);
       var add_element_btn =
-       "<button id='add_element_btn'>Add</button>"
+       "<button id='add_element_btn'>Add</button>";
       control_panel.append(add_element_btn);
       var connector_btn =
-       "<button id='connector_btn'>Connect Elements</button>"
+       "<button id='connector_btn'>Connect Elements</button>";
       control_panel.append(connector_btn);
-    }
+    };
 
     var create_staging = function(LoadedSvgs) {
       Stage = new Kinetic.Stage({
@@ -278,13 +296,18 @@ $(function() {
       var coords = [];
       var first;
       var second;
+      Layer1.on('dblclick', function(evt) {
+        if(evt.targetNode.className === "Image") {
+          evt.targetNode.parent_object.addinterface();
+        }
+      });
       Layer1.on('click', function(evt) {
-        if (evt.targetNode.className === "Circle") {
+        if(evt.targetNode.className === "Circle") {
           coords.push(evt.targetNode.getPosition().x);
           coords.push(evt.targetNode.getPosition().y);
           if(coords.length === 2) {
            first = evt.targetNode;
-          };
+          }
           if(coords.length === 4) {
             second = evt.targetNode;
             line = new Joint(coords);
@@ -295,7 +318,7 @@ $(function() {
             Layer1.draw();
             coords=[];
             clicks = 0;
-          };
+          }
         }
       });
 
@@ -309,7 +332,7 @@ $(function() {
       Layer1.add(cloud.kinetic);
       Layer1.add(router.kinetic);
       Layer1.draw();
-    }
+    };
 
     var load_svgs = function() {
       var Paths = [
@@ -330,15 +353,15 @@ $(function() {
             console.log('Images Loaded');
             create_staging(LoadedSvgs);
           }
-        }
+        };
         img.src = obj.path;
       });
-    }
+    };
     return {
       init: init,
       Server: Server,
       Desktop: Desktop
-    }
+    };
   })();
 
   var StageOptions = {
