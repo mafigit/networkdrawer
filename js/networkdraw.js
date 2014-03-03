@@ -96,7 +96,6 @@ $(function() {
       });
     };
 
-
     var Joint = function(coords) {
       _self = this;
       this.p1 = {x: coords[0], y: coords[1]};
@@ -110,6 +109,33 @@ $(function() {
         stroke: 'black',
         strokeWidth: 2,
       });
+    };
+
+    var Cloud = function(svgs, x, y) {
+      var _self = this;
+      this.base = Server;
+      this.base(svgs, x, y);
+      this.type = "Cloud";
+      this.kinetic = kinetic_image(svgs, x, y, this.type, 72, 75);
+      this.kinetic.on('dragmove', nodeMoveHandler);
+    };
+
+    var Router = function(svgs, x, y) {
+      var _self = this;
+      this.base = Server;
+      this.base(svgs, x, y);
+      this.type = "Router";
+      this.kinetic = kinetic_image(svgs, x, y, this.type, 72, 75);
+      this.kinetic.on('dragmove', nodeMoveHandler);
+    };
+
+    var Desktop = function(svgs, x, y) {
+      var _self = this;
+      this.base = Server;
+      this.base(svgs, x, y);
+      this.type = "Desktop";
+      this.kinetic = kinetic_image(svgs, x, y, this.type, 72, 75);
+      this.kinetic.on('dragmove', nodeMoveHandler);
     };
 
     var Server = function(svgs, x, y) {
@@ -155,69 +181,46 @@ $(function() {
           iface.offset_y =
             iface.kinetic.getPosition().y - _self.kinetic.getPosition().y;
         });
-
-
-        iface.kinetic.on('dragmove', function() {
-          iface.joints.forEach(function(joint) {
-            interfaceJointsHandler(iface, joint);
-          });
-        });
-
+        iface.kinetic.on('dragmove', interfaceJointsHandler);
         Layer1.add(iface.kinetic);
         Layer1.draw();
         this.interfaces.push(iface);
       };
-      this.kinetic.on('dragmove', function() {
-        _self.interfaces.forEach(function(iface) {
-          iface.kinetic.setPosition({
-            x: _self.kinetic.getPosition().x + iface.offset_x,
-            y: _self.kinetic.getPosition().y + iface.offset_y
-          });
-          iface.joints.forEach(function(joint) {
-            interfaceJointsHandler(iface, joint);
-          });
+      this.kinetic.on('dragmove', nodeMoveHandler);
+    };
+
+    function nodeMoveHandler(e) {
+      var _self = e.targetNode.parent_object;
+      _self.interfaces.forEach(function(iface) {
+        iface.kinetic.setPosition({
+          x: _self.kinetic.getPosition().x + iface.offset_x,
+          y: _self.kinetic.getPosition().y + iface.offset_y
         });
+        interfaceJointsHandler(undefined, iface);
       });
-    };
+    }
 
-    var interfaceJointsHandler = function(iface, joint) {
-      var iface_x = iface.kinetic.getPosition().x;
-      var iface_y = iface.kinetic.getPosition().y;
-      if(joint.point === "p1") {
-        joint.obj.kinetic.setPoints(
-          [iface_x, iface_y, joint.obj.p2.x, joint.obj.p2.y]
-        );
-        joint.obj.p1 = { x: iface_x, y: iface_y };
-        Layer1.draw();
-      }
-      if(joint.point === "p2") {
-        joint.obj.kinetic.setPoints(
-          [joint.obj.p1.x, joint.obj.p1.y, iface_x, iface_y]
-        );
-        joint.obj.p2 = { x: iface_x, y: iface_y };
-        Layer1.draw();
-      }
-    };
-    var Desktop = function(svgs, x, y) {
-      this.type = "Desktop";
-      this.x = x;
-      this.y = x;
-      this.kinetic = kinetic_image(svgs, x, y, this.type, 75, 75);
-    };
-
-    var Router = function(svgs, x, y) {
-      this.type = "Router";
-      this.x = x;
-      this.y = x;
-      this.kinetic = kinetic_image(svgs, x, y, this.type, 75, 75);
-    };
-
-    var Cloud = function(svgs, x, y) {
-      this.type = "Cloud";
-      this.x = x;
-      this.y = x;
-      this.kinetic = kinetic_image(svgs, x, y, this.type, 75, 75);
-    };
+    function interfaceJointsHandler(e, iface) {
+      var iface = iface || e.targetNode.parent_object; //jshint ignore: line
+      iface.joints.forEach(function(joint) {
+        var iface_x = iface.kinetic.getPosition().x;
+        var iface_y = iface.kinetic.getPosition().y;
+        if(joint.point === "p1") {
+          joint.obj.kinetic.setPoints(
+            [iface_x, iface_y, joint.obj.p2.x, joint.obj.p2.y]
+          );
+          joint.obj.p1 = { x: iface_x, y: iface_y };
+          Layer1.draw();
+        }
+        if(joint.point === "p2") {
+          joint.obj.kinetic.setPoints(
+            [joint.obj.p1.x, joint.obj.p1.y, iface_x, iface_y]
+          );
+          joint.obj.p2 = { x: iface_x, y: iface_y };
+          Layer1.draw();
+        }
+      });
+    }
 
     var add_event_listeners = function(LoadedSvgs) {
       $('#connector_btn').click(function(e) {
@@ -237,16 +240,22 @@ $(function() {
          break;
          case "Desktop":
            desktop = new Desktop(LoadedSvgs, 30, 50);
+           desktop.kinetic.parent_object = desktop;
+           desktop.addinterface();
            Layer1.add(desktop.kinetic);
            Layer1.draw();
          break;
          case "Cloud":
            cloud = new Cloud(LoadedSvgs, 30, 50);
+           cloud.kinetic.parent_object = cloud;
+           cloud.addinterface();
            Layer1.add(cloud.kinetic);
            Layer1.draw();
          break;
          case "Router":
            router = new Router(LoadedSvgs, 30, 50);
+           router.kinetic.parent_object = router;
+           router.addinterface();
            Layer1.add(router.kinetic);
            Layer1.draw();
          break;
@@ -322,15 +331,6 @@ $(function() {
         }
       });
 
-      server3 = new Server(LoadedSvgs, 500, 50);
-      desktop1 = new Desktop(LoadedSvgs, 800, 50);
-      cloud = new Cloud(LoadedSvgs, 300, 50);
-      router = new Router(LoadedSvgs, 650, 50);
-
-      Layer1.add(server3.kinetic);
-      Layer1.add(desktop1.kinetic);
-      Layer1.add(cloud.kinetic);
-      Layer1.add(router.kinetic);
       Layer1.draw();
     };
 
