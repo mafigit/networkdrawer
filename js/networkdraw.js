@@ -316,6 +316,8 @@ $(function() {
           coords.push(evt.targetNode.getPosition().y);
           if(coords.length === 2) {
            first = evt.targetNode;
+           evt.targetNode.fill('yellow')
+           Layer1.draw();
           }
           if(coords.length === 4) {
             second = evt.targetNode;
@@ -324,6 +326,7 @@ $(function() {
             first.parent_object.joints.push({point: 'p1', obj: line});
             second.parent_object.joints.push({point: 'p2', obj: line});
             Layer1.add(line.kinetic);
+            first.fill('red');
             Layer1.draw();
             coords=[];
             clicks = 0;
