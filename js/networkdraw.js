@@ -354,11 +354,13 @@ $(function() {
           }
           if(coords.length === 4) {
             second = evt.targetNode;
-            line = new Joint(coords);
-            Joints.push(line);
-            first.parent_object.joints.push({point: 'p1', obj: line});
-            second.parent_object.joints.push({point: 'p2', obj: line});
-            Layer1.add(line.kinetic);
+            if(first !== second) {
+              line = new Joint(coords);
+              Joints.push(line);
+              first.parent_object.joints.push({point: 'p1', obj: line});
+              second.parent_object.joints.push({point: 'p2', obj: line});
+              Layer1.add(line.kinetic);
+            }
             first.fill('red');
             Layer1.draw();
             coords=[];
