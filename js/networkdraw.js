@@ -175,11 +175,25 @@ $(function() {
           _self.get_interface_add_offset().y
         );
         iface.kinetic.parent_object = iface;
-        iface.kinetic.on('dragend', function() {
-          iface.offset_x =
-            iface.kinetic.getPosition().x - _self.kinetic.getPosition().x;
-          iface.offset_y =
-            iface.kinetic.getPosition().y - _self.kinetic.getPosition().y;
+        var old_position;
+        iface.kinetic.on('dragstart', function() {
+          iface.server.kinetic.setStroke('Red');
+          old_position = iface.kinetic.getPosition();
+        });
+        iface.kinetic.on('dragend', function(e) {
+          iface.server.kinetic.setStroke('');
+          iface.server.kinetic.setStrokeWidth(0);
+          Layer1.draw();
+          if(colliding(iface.server, iface)) {
+            iface.kinetic.setPosition(old_position);
+            interfaceJointsHandler(e);
+            Layer1.draw();
+          } else {
+            iface.offset_x =
+              iface.kinetic.getPosition().x - _self.kinetic.getPosition().x;
+            iface.offset_y =
+              iface.kinetic.getPosition().y - _self.kinetic.getPosition().y;
+          }
         });
         iface.kinetic.on('dragmove', interfaceJointsHandler);
         Layer1.add(iface.kinetic);
@@ -187,6 +201,25 @@ $(function() {
         this.interfaces.push(iface);
       };
       this.kinetic.on('dragmove', nodeMoveHandler);
+    };
+
+    var colliding = function(rec1, rec2) {
+      var status = false;
+      var rec1Top = rec1.kinetic.getPosition().y;
+      var rec1Bottom = rec1.kinetic.getPosition().y + rec1.kinetic.height();
+      var rec1Left = rec1.kinetic.getPosition().x;
+      var rec1Right = rec1.kinetic.getPosition().x + rec1.kinetic.width();
+
+      var rec2Top = rec2.kinetic.getPosition().y;
+      var rec2Bottom = rec2.kinetic.getPosition().y + rec2.kinetic.height();
+      var rec2Left = rec2.kinetic.getPosition().x;
+      var rec2Right = rec2.kinetic.getPosition().x + rec2.kinetic.width();
+
+      if(!(rec1Bottom < rec2Top || rec1Top > rec2Bottom || rec1Left > rec2Right ||
+        rec1Right < rec2Left)) {
+        status = true;
+      }
+      return status;
     };
 
     function nodeMoveHandler(e) {
@@ -202,9 +235,9 @@ $(function() {
 
     function interfaceJointsHandler(e, iface) {
       var iface = iface || e.targetNode.parent_object; //jshint ignore: line
+      var iface_x = iface.kinetic.getPosition().x;
+      var iface_y = iface.kinetic.getPosition().y;
       iface.joints.forEach(function(joint) {
-        var iface_x = iface.kinetic.getPosition().x;
-        var iface_y = iface.kinetic.getPosition().y;
         if(joint.point === "p1") {
           joint.obj.kinetic.setPoints(
             [iface_x, iface_y, joint.obj.p2.x, joint.obj.p2.y]
@@ -361,9 +394,7 @@ $(function() {
       });
     };
     return {
-      init: init,
-      Server: Server,
-      Desktop: Desktop
+      init: init
     };
   })();
 
