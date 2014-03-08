@@ -76,11 +76,14 @@ $(function() {
       return k_image;
     };
 
-    var Interface = function(x, y, server, offset_x, offset_y) {
+    var Interface = function(x, y, server, offset_x, offset_y, count) {
       _self = this;
       this.type = "Interface";
       this.x = x;
       this.y = y;
+      this.interface_type = 'eth';
+      this.name = _self.interface_type + count;
+      this.ip_addresses = [];
       this.offset_x = offset_x;
       this.offset_y = offset_y;
       this.server = server;
@@ -172,7 +175,8 @@ $(function() {
           _self.kinetic.getPosition().y + _self.get_interface_add_offset().y,
           _self,
           _self.get_interface_add_offset().x,
-          _self.get_interface_add_offset().y
+          _self.get_interface_add_offset().y,
+          _self.interfaces.length
         );
         iface.kinetic.parent_object = iface;
         var old_position;
