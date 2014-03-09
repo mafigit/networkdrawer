@@ -50,7 +50,8 @@ $(function() {
         y: y,
         width: width,
         height: width,
-        draggable: true
+        draggable: true,
+        name: 'image'
       });
       return k_image;
     };
@@ -195,6 +196,25 @@ $(function() {
       this.kinetic.on('dragmove', nodeMoveHandler);
     };
 
+    var colliding_shape = function(rec1, rec2) {
+      var status = false;
+      var rec1Top = rec1.getPosition().y;
+      var rec1Bottom = rec1.getPosition().y + rec1.height();
+      var rec1Left = rec1.getPosition().x;
+      var rec1Right = rec1.getPosition().x + rec1.width();
+
+      var rec2Top = rec2.getPosition().y;
+      var rec2Bottom = rec2.getPosition().y + rec2.height();
+      var rec2Left = rec2.getPosition().x;
+      var rec2Right = rec2.getPosition().x + rec2.width();
+
+      if(!(rec1Bottom < rec2Top || rec1Top > rec2Bottom || rec1Left > rec2Right ||
+        rec1Right < rec2Left)) {
+        status = true;
+      }
+      return status;
+    };
+
     var colliding = function(rec1, rec2) {
       var status = false;
       var rec1Top = rec1.kinetic.getPosition().y;
@@ -317,6 +337,14 @@ $(function() {
       control_panel.append(add_element_btn);
     };
 
+    var getMousePos = function(canvas, evt) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+
     var create_staging = function(LoadedSvgs) {
       Stage = new Kinetic.Stage({
         container: 'container',
@@ -326,11 +354,73 @@ $(function() {
       create_control_panel();
 
       add_event_listeners(LoadedSvgs);
+      var background = new Kinetic.Rect({
+        x: 0,
+        y: 0,
+        width: Stage.getWidth(),
+        height: Stage.getHeight(),
+        fill: 'white'
+      });
+
+      Layer0 = new Kinetic.Layer();
+      Stage.add(Layer0);
+      Layer0.add(background);
       Layer1 = new Kinetic.Layer();
       Stage.add(Layer1);
+      Layer0.draw();
+      Layer1.draw();
+
+      var bg_canvas = $('canvas')[0]
+
       var coords = [];
       var first;
       var second;
+
+      var mark_start;
+      var mark_current;
+      var old_rect;
+      var current_rect;
+      Layer0.on('mousedown', function(evt) {
+        mark_start = getMousePos(bg_canvas, evt);
+      });
+
+      Layer0.on('mousemove', function(evt) {
+        if(mark_start !== undefined) {
+          if(old_rect !== undefined) {
+            old_rect.remove();
+          }
+          mark_current = getMousePos(bg_canvas, evt);
+          current_rect = new Kinetic.Rect({
+            x: mark_start.x,
+            y: mark_start.y,
+            width: mark_current.x - mark_start.x,
+            height: mark_current.y - mark_start.y,
+            fill: 'white',
+            stroke: 'black',
+            strokeWidth: 2
+          });
+          Layer0.add(current_rect);
+          Layer0.draw();
+          old_rect = current_rect;
+        }
+      });
+
+      Layer0.on('mouseup', function(evt) {
+        Stage.get('.image').each(function(image) {
+          if(colliding_shape(image, current_rect)) {
+            image.setStroke('Red');
+          } else {
+            image.setStroke('');
+            image.setStrokeWidth(0);
+          }
+        });
+        current_rect.remove();
+        old_rect.remove();
+        Layer0.draw();
+        Layer1.draw();
+        mark_start = undefined;
+      });
+
       Layer1.on('dblclick', function(evt) {
         if(evt.targetNode.className === "Image") {
           evt.targetNode.parent_object.addinterface();
@@ -397,6 +487,7 @@ $(function() {
   var StageOptions = {
   };
   var Stage;
+  var Layer0;
   var Layer1;
   NetworkDrawer.objects.init(Stage);
 });
