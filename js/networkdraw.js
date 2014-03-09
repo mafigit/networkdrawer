@@ -260,10 +260,6 @@ $(function() {
     }
 
     var add_event_listeners = function(LoadedSvgs) {
-      $('#connector_btn').click(function(e) {
-        connector_mode = true;
-      });
-
       $('#add_element_btn').click(function(e) {
         e.preventDefault();
         var value = $('#element_selection').val();
@@ -323,9 +319,6 @@ $(function() {
       var add_element_btn =
        "<button id='add_element_btn'>Add</button>";
       control_panel.append(add_element_btn);
-      var connector_btn =
-       "<button id='connector_btn'>Connect Elements</button>";
-      control_panel.append(connector_btn);
     };
 
     var create_staging = function(LoadedSvgs) {
