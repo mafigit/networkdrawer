@@ -102,6 +102,15 @@ $(function() {
       this.kinetic.on('dragmove', nodeMoveHandler);
     };
 
+    var CiscoSwitch = function(svgs, x, y) {
+      var _self = this;
+      this.base = Server;
+      this.base(svgs, x, y);
+      this.type = "CiscoSwitch";
+      this.kinetic = kinetic_image(svgs, x, y, this.type, 68, 29);
+      this.kinetic.on('dragmove', nodeMoveHandler);
+    };
+
     var Router = function(svgs, x, y) {
       var _self = this;
       this.base = Server;
@@ -264,6 +273,13 @@ $(function() {
            Layer1.add(cloud.kinetic);
            Layer1.draw();
          break;
+         case "CiscoSwitch":
+           cisco_switch = new CiscoSwitch(LoadedSvgs, 30, 50);
+           cisco_switch.kinetic.parent_object = cisco_switch;
+           cisco_switch.addinterface();
+           Layer1.add(cisco_switch.kinetic);
+           Layer1.draw();
+         break;
          case "Router":
            router = new Router(LoadedSvgs, 30, 50);
            router.kinetic.parent_object = router;
@@ -293,6 +309,7 @@ $(function() {
           "<option value='Desktop'>Desktop</option>" +
           "<option value='Cloud'>Cloud</option>" +
           "<option value='Router'>Router</option>" +
+          "<option value='CiscoSwitch'>CiscoSwitch</option>" +
         "</select>";
       control_panel.append(element_selection);
       var add_element_btn =
@@ -353,6 +370,7 @@ $(function() {
         {name: 'Server', path: "./svg/osa_server.svg"},
         {name: 'Desktop', path: "./svg/osa_desktop.svg"},
         {name: 'Router', path: "./svg/osa_device-wireless-router.svg"},
+        {name: 'CiscoSwitch', path: "./svg/cisco_workgroup_switch.svg"},
         {name: 'Cloud', path: "./svg/osa_cloud.svg"}
       ];
       var LoadedSvgs = [];
