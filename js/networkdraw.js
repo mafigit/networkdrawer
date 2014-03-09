@@ -1,4 +1,4 @@
-(function() {
+$(function() {
   Kinetic.MyCircle = function(config) {
     this._initMyCircle(config);
   };
@@ -24,30 +24,9 @@
   };
 
   Kinetic.Util.extend(Kinetic.MyImage, Kinetic.Image);
-})();
 
-$(function() {
   var NetworkDrawer = NetworkDrawer || {};
   NetworkDrawer.util = (function() {
-    // get relative mouse coords in canvas
-    function relMouseCoords(event){
-      var totalOffsetX = 0;
-      var totalOffsetY = 0;
-      var canvasX = 0;
-      var canvasY = 0;
-      var currentElement = this;
-
-      do {
-        totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-        totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-      }
-      while(currentElement = currentElement.offsetParent) { //jshint ignore: line
-        canvasX = event.pageX - totalOffsetX;
-        canvasY = event.pageY - totalOffsetY;
-        return { x: canvasX, y: canvasY };
-      }
-    }
-    HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
   })();
 
   NetworkDrawer.objects =(function() {
@@ -346,7 +325,7 @@ $(function() {
           coords.push(evt.targetNode.getPosition().y);
           if(coords.length === 2) {
            first = evt.targetNode;
-           evt.targetNode.fill('yellow')
+           evt.targetNode.fill('yellow');
            Layer1.draw();
           }
           if(coords.length === 4) {

@@ -1,0 +1,12 @@
+{
+  "name": "networkdrawer",
+  "version": "0.0.1",
+  "scripts": {
+    "uglify": "./node_modules/uglify-js/bin/uglifyjs js/networkdraw.js > js/networkdraw.min.js",
+    "lint": "./node_modules/jshint/bin/jshint js/networkdraw.js"
+  },
+  "dependencies": {
+    "uglify-js": "*",
+    "jshint": "*"
+  }
+}
